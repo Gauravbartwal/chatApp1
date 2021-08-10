@@ -1,8 +1,7 @@
-from typing import Optional
-from fastapi import FastAPI, HTTPException, Depends, Request, status
+from fastapi import FastAPI, HTTPException, Depends, Request, status, Form, WebSocket
 from fastapi.responses import JSONResponse
-from fastapi_jwt_auth import AuthJWT
-from fastapi_jwt_auth.exceptions import AuthJWTException
+# from fastapi_jwt_auth import AuthJWT
+# from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -12,6 +11,7 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.models import Model
 from passlib.hash import bcrypt
 import jwt
+from typing import List
 
 app = FastAPI()
 
@@ -34,9 +34,9 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-class User(Model):
-    username = fields.CharField(50, unique=True)
-    password = fields.CharField(128)
+class User(BaseModel):
+    username: str  # fields.CharField(50, unique=True)
+    password: str  # fields.CharField(128)
 
     @classmethod
     async def get_user(cls, username):
@@ -60,11 +60,12 @@ class UserId(Model):
         return bcrypt.verify(password, self.password)
 
 
-User_Pydantic0 = pydantic_model_creator(User, name="User0")
-UserIn_Pydantic0 = pydantic_model_creator(User, name="UserIn0", exclude_readonly=True)
+# User_Pydantic0 = pydantic_model_creator(User, name="User0")
+# UserIn_Pydantic0 = pydantic_model_creator(User, name="UserIn0", exclude_readonly=True)
 
 User_Pydantic = pydantic_model_creator(UserId, name="User")
-UserIn_Pydantic = pydantic_model_creator(UserId, name="UserIn", exclude_readonly=True)
+UserIn_Pydantic = pydantic_model_creator(
+    UserId, name="UserIn", exclude_readonly=True)
 
 
 @app.get("/", tags=["root"])
@@ -101,16 +102,18 @@ async def register(user: UserIn_Pydantic):
         username=user.username,
         password=bcrypt.hash(user.password),
     )
-    # print(user.username)
+    print(user.username)
     await user_obj.save()
-    return await User_Pydantic.from_tortoise_orm(user_obj)
-    # access_token = Authorize.create_access_token(subject=user.username)
-    # return {"access_token": access_token}
+    await User_Pydantic.from_tortoise_orm(user_obj)
+    access_token = jwt.encode(user_obj.dict(), JWT_SECRET)
+    return {"access_token": access_token, "token_type": "brearer", "user": user_obj}
 
 
 @app.post("/login")
-async def login(user: OAuth2PasswordRequestForm = Depends()):
+# async def login(username: str = Form(...), password: str=Form(...)):
+async def login(user: User):
     user = await authenticate_user(user.username, user.password)
+    print(user.username, user.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -123,19 +126,42 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
     # but since we are not going to use any db, straight away we will just create the token and send it back
     # subject identifier for who this token is for example id or username from database
     access_token = jwt.encode(user_obj.dict(), JWT_SECRET)
-    return {"access_token": access_token, "token_type": "brearer"}
+    return {"access_token": access_token, "token_type": "brearer", "user": user_obj}
 
 
-@app.get("/chat", response_model=User_Pydantic)
-async def chat_user(user: User_Pydantic = Depends(get_current_user)):
-    print("chat user")
+@app.get("/chat/{chatRoom}", response_model=User_Pydantic)
+async def chat_user(chatRoom: str, user: User_Pydantic = Depends(get_current_user)):
+    print(chatRoom)
     return user
 
 
+class ConnectionManager:
+    def __init__(self):
+        self.connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.connections.append(websocket)
+
+    async def broadcast(self, data: str):
+        for connection in self.connections:
+            await connection.send_text(data)
+
+
+manager = ConnectionManager()
+
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    await manager.connect(websocket)
+    while True:
+        data = await websocket.receive_text()
+        await manager.broadcast(f"Client {client_id}: {data}")
+
 register_tortoise(
     app,
-    db_url="sqlite://db.sqlite3",
-    modules={"modles": ["main"]},
+    db_url="sqlite://backend/db.sqlite3",
+    modules={"modules": ["backend.main"]},
     generate_schemas=True,
     add_exception_handlers=True,
 )

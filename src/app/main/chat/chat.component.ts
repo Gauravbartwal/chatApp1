@@ -22,6 +22,7 @@ export class ChatComponent implements OnInit {
     this._api.getTypeRequest('chat').subscribe((res: any) => {
       console.log(res);
     }, (err) => {
+      this._auth.clearStorage();
       alert("Not authorised");
       console.log(err);
     });

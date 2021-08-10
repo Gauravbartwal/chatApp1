@@ -4,13 +4,13 @@
   <div>
     <form [formGroup] = 'form' (ngSubmit) = 'register()'>
         <label>First Name</label>
-        <input type="text" formControlName="firstname"/>
+        <input type="text" name = "firstname" formControlName="firstname"/>
         <label>Last Name</label>
-        <input type="text" formControlName="lastname"/>
+        <input type="text" name = "lastname" formControlName="lastname"/>
         <label>Username</label>
-        <input type = 'text' formControlName = 'username' />
+        <input type = 'text' name = "username" formControlName = 'username' />
         <label>Password</label>
-        <input type = 'password' formControlName = 'password' />
+        <input type = 'password' name = "password" formControlName = 'password' />
         <div>
             <button type ='Register' [disabled] = '!this.form.valid' class="btn btn-primary">
                 Register

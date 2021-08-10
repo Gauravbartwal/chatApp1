@@ -16,6 +16,7 @@ export class AuthGuardService {
   canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
     if (this._authService.getToken()) {
       return true;
+
     }
 // navigate to login page
     this._router.navigate(['/login']);

@@ -5,9 +5,9 @@
     <div>
       <form [formGroup] = 'form' (ngSubmit) = 'login()'>
           <label>Username</label>
-          <input type = 'text' formControlName = 'username' />
+          <input type = 'text' name = "username" formControlName = 'username' />
           <label>Password</label>
-          <input type = 'password' formControlName = 'password' />
+          <input type = 'password' name = "password" formControlName = 'password' />
           <div>
               <button type ='submit' [disabled] = '!this.form.valid' class="btn btn-primary">
                   Login

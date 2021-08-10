@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-chatroom-window',
@@ -6,7 +6,7 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./chatroom-window.component.css']
 })
 export class ChatroomWindowComponent implements OnInit {
-
+  @Input() newmessage : string;
   constructor() { }
 
   // Replace with backend data
@@ -33,5 +33,6 @@ export class ChatroomWindowComponent implements OnInit {
 
   ngOnInit(): void {
   }
+
 
 }
