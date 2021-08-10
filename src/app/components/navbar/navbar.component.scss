@@ -1,0 +1,17 @@
+@import "../../../styles/variables.scss";
+
+.container {
+  height: 100% !important;
+}
+span {
+  color: #ffffff;
+}
+
+a {
+  color: #efefef;
+  margin: 3em;
+
+  &.active {
+    border-bottom: 3px solid #d9b310;
+  }
+}

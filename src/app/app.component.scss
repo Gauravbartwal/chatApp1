@@ -1,0 +1,11 @@
+@import "../styles/variables";
+
+.alert-wrapper {
+  position: relative;
+
+  alert {
+    position: relative;
+    top: 60px;
+    width: 100%;
+  }
+}

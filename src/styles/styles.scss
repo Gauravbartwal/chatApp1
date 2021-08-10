@@ -1,0 +1,21 @@
+@import "variables";
+@import "../../node_modules/bootstrap/scss/bootstrap";
+
+body {
+  color: $secondary;
+}
+
+.navbar {
+  height: 60px;
+}
+
+button {
+  width: 100%;
+  &.btn {
+    border-radius: 0;
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+}
